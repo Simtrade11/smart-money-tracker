@@ -1884,23 +1884,7 @@ function toggleCard(pfx,i){
   arr.textContent=open?'▾':'▸';
 }
 
-function renderFT(){
-  var smart=new Set(H.map(function(s){return s.t;}));
-  var totalPnl=0,cnt=0;
-  var rows=FT.map(function(h){
-    var d=LD[h.sym]||{},lp=d.q&&d.q.c?d.q.c:0;
-    var pnl=lp>0&&h.avg>0?((lp-h.avg)/h.avg)*100:null;
-    var pnlVal=lp>0&&h.avg>0?(lp-h.avg)*h.qty:null;
-    if(pnlVal!=null){totalPnl+=pnlVal;cnt++;}
-    var isM=smart.has(h.sym);
-    var pnlS=pnl!=null?(pnl>=0?'+':'')+pnl.toFixed(1)+'%':'—';
-    var pnlC=pnl!=null?(pnl>=0?'ppos':'pneg'):'';
-    var bsh=getBSH(h.sym,h.avg);
-    return '<div class="frow"><div class="tk">'+h.sym+'</div><div class="cn">'+h.name+'</div><div style="font-family:var(--mono);font-size:.72rem;color:var(--tx);">'+h.qty.toFixed(h.qty%1===0?0:4)+'</div><div style="font-family:var(--mono);font-size:.72rem;color:var(--mu2);">$'+h.avg.toFixed(2)+'</div><div class="'+pnlC+'">'+pnlS+'</div><div class="tt bsh '+bsh.cls+'">'+bsh.icon+' '+bsh.label+'<div class="tip tip-r">'+bsh.tip+'</div></div></div>';
-  }).join('');
-  document.getElementById('frows').innerHTML=rows||'<div class="ldr" style="animation:none;">No positions</div>';
-  if(cnt>0){var str=(totalPnl>=0?'+$':'-$')+Math.abs(totalPnl).toFixed(0);document.getElementById('v6').textContent=str;document.getElementById('v6').className='sval '+(totalPnl>=0?'sg':'sr');}
-}
+
 
 // WEALTH
 function setWT(t,btn){wtMode=t;document.querySelectorAll('.wtab').forEach(function(b){b.classList.remove('on');});btn.classList.add('on');renderWealth();}
