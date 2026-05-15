@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Money Simulation Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Anybody:wght@300;400;500;700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07080a;--s1:#0f1218;--s2:#171c26;--s3:#1e2433;
+  --b1:rgba(255,255,255,0.07);--b2:rgba(255,255,255,0.13);--b3:rgba(255,255,255,0.22);
+  --tx:#edeae4;--mu:#6b7890;--mu2:#9aaabb;
+  --g:#00e87a;--g2:#00b85f;--gd:rgba(0,232,122,0.12);
+  --r:#ff3d54;--rd:rgba(255,61,84,0.1);
+  --a:#ffb020;--ad:rgba(255,176,32,0.1);
+  --p:#7c7fff;--pd:rgba(124,127,255,0.1);
+  --c:#22d3ee;
+  --mono:'DM Mono',monospace;
+  --disp:'Anybody',sans-serif;
+  --body:'DM Sans',sans-serif;
+}
+html.light{
+  --bg:#f0f2f6;--s1:#ffffff;--s2:#eaecf2;--s3:#e0e3ec;
+  --b1:rgba(0,0,0,0.07);--b2:rgba(0,0,0,0.13);--b3:rgba(0,0,0,0.2);
+  --tx:#111520;--mu:#6b7280;--mu2:#374151;
+  --g:#006b38;--g2:#008a49;--gd:rgba(0,107,56,0.1);
+  --r:#c0152a;--rd:rgba(192,21,42,0.08);
+  --a:#92570a;--ad:rgba(146,87,10,0.1);
+  --p:#3730a3;--pd:rgba(55,48,163,0.08);
+  --c:#0369a1;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{font-size:13.5px;scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--tx);font-family:var(--body);min-height:100vh;-webkit-font-smoothing:antialiased;overflow-x:hidden;transition:background .2s,color .2s;}
+body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,232,122,.012) 1px,transparent 1px),linear-gradient(90deg,rgba(0,232,122,.012) 1px,transparent 1px);background-size:50px 50px;pointer-events:none;z-index:0;transition:opacity .2s;}
+html.light body::after{opacity:0;}
+
+.wrap{position:relative;z-index:1;max-width:1260px;margin:0 auto;padding:0 20px 40px;}
+
+/* ── SETUP SCREEN ── */
+#setup-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px 20px;}
+.setup-card{max-width:560px;width:100%;background:var(--s1);border:1px solid var(--b2);border-radius:20px;padding:44px;position:relative;overflow:hidden;}
+.setup-card::before{content:'';position:absolute;top:-60px;right:-60px;width:220px;height:220px;background:radial-gradient(circle,rgba(0,232,122,.08),transparent 70%);pointer-events:none;}
+.setup-logo{display:flex;align-items:center;gap:12px;margin-bottom:36px;}
+.setup-logo-mark{width:44px;height:44px;background:var(--g);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.setup-logo-mark svg{width:24px;height:24px;}
+.setup-logo-name{font-family:var(--disp);font-size:1.4rem;font-weight:900;letter-spacing:-.03em;color:var(--tx);}
+.setup-logo-name span{color:var(--g);}
+.setup-h{font-family:var(--disp);font-size:1.8rem;font-weight:900;letter-spacing:-.04em;line-height:1.15;margin-bottom:10px;}
+.setup-h span{color:var(--g);}
+.setup-p{font-size:.85rem;color:var(--mu2);line-height:1.75;margin-bottom:32px;}
+.field-group{margin-bottom:20px;}
+.field-label{font-size:.78rem;font-weight:500;color:var(--mu2);margin-bottom:7px;display:block;font-family:var(--mono);}
+.field-label span{color:var(--g);margin-left:4px;}
+.field-input{width:100%;background:var(--s2);border:1px solid var(--b2);border-radius:10px;padding:12px 14px;color:var(--tx);font-family:var(--mono);font-size:.9rem;outline:none;transition:border-color .2s;}
+.field-input:focus{border-color:var(--g);}
+.field-input::placeholder{color:var(--mu);}
+.amount-presets{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;}
+.preset{background:var(--s2);border:1px solid var(--b1);border-radius:7px;padding:5px 12px;font-family:var(--mono);font-size:.75rem;color:var(--mu2);cursor:pointer;transition:all .15s;}
+.preset:hover{border-color:var(--g);color:var(--g);}
+.preset.on{background:var(--gd);border-color:var(--g);color:var(--g);}
+.period-options{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.period-opt{background:var(--s2);border:1px solid var(--b1);border-radius:9px;padding:11px 14px;cursor:pointer;transition:all .15s;}
+.period-opt:hover{border-color:var(--b2);}
+.period-opt.on{border-color:var(--g);background:var(--gd);}
+.period-name{font-size:.8rem;font-weight:500;color:var(--tx);}
+.period-desc{font-size:.69rem;color:var(--mu);margin-top:2px;}
+.period-opt.on .period-name{color:var(--g);}
+.api-row{display:flex;gap:8px;margin-bottom:6px;}
+.btn-launch{width:100%;background:var(--g);color:#07080a;border:none;border-radius:11px;padding:14px;font-family:var(--disp);font-size:1rem;font-weight:700;cursor:pointer;letter-spacing:-.01em;transition:opacity .15s;margin-top:6px;}
+.btn-launch:hover{opacity:.88;}
+.btn-launch:disabled{opacity:.4;cursor:not-allowed;}
+#setup-err{font-size:.73rem;color:var(--r);min-height:16px;margin-top:4px;font-family:var(--mono);}
+
+/* ── MAIN APP ── */
+#app{display:none;}
+
+/* ticker */
+#ticker-wrap{background:var(--s1);border-bottom:1px solid var(--b2);overflow:hidden;height:34px;display:flex;align-items:center;}
+.ticker-inner{display:flex;white-space:nowrap;animation:scrollTicker 80s linear infinite;}
+.ticker-inner:hover{animation-play-state:paused;}
+@keyframes scrollTicker{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+.tick{display:inline-flex;align-items:center;gap:8px;padding:0 22px;font-family:var(--mono);font-size:.73rem;border-right:1px solid var(--b1);}
+.tick-dot{width:5px;height:5px;border-radius:50%;}
+.tick-sym{font-weight:500;}
+.tick-up{color:var(--g);}
+.tick-dn{color:var(--r);}
+
+/* header */
+header{padding:14px 0 12px;border-bottom:1px solid var(--b1);margin-bottom:20px;}
+.hi{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+.hlogo{display:flex;align-items:center;gap:10px;}
+.hmark{width:30px;height:30px;background:var(--g);border-radius:8px;display:flex;align-items:center;justify-content:center;}
+.hmark svg{width:17px;height:17px;}
+.hname{font-family:var(--disp);font-size:1.05rem;font-weight:900;letter-spacing:-.03em;}
+.hname span{color:var(--g);}
+.hright{display:flex;align-items:center;gap:9px;flex-wrap:wrap;}
+.hmeta{font-family:var(--mono);font-size:.67rem;color:var(--mu);display:flex;align-items:center;gap:12px;}
+.ldot{width:6px;height:6px;border-radius:50%;background:var(--g);animation:blink 2s infinite;display:inline-block;margin-right:4px;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.2;}}
+.btn{background:transparent;border:1px solid var(--b2);border-radius:7px;padding:5px 11px;color:var(--mu);font-family:var(--mono);font-size:.67rem;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all .15s;white-space:nowrap;}
+.btn:hover{border-color:var(--g);color:var(--g);}
+.btn.spin svg{animation:rot 1s linear infinite;}
+@keyframes rot{to{transform:rotate(360deg);}}
+.btn-danger{border-color:rgba(255,61,84,.3);color:var(--r);}
+.btn-danger:hover{border-color:var(--r);background:var(--rd);}
+.btn-accent{background:var(--g);color:#07080a;border:none;font-family:var(--disp);font-weight:700;}
+.btn-accent:hover{opacity:.88;color:#07080a;}
+#theme-btn{background:var(--s2);border:1px solid var(--b2);border-radius:20px;padding:4px 11px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:.67rem;color:var(--mu2);transition:all .2s;user-select:none;}
+#theme-btn:hover{border-color:var(--g);color:var(--g);}
+
+/* stats strip */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px;margin-bottom:18px;}
+.stat{background:var(--s1);border:1px solid var(--b1);border-radius:12px;padding:13px 15px;transition:border-color .2s;}
+.stat:hover{border-color:var(--b2);}
+.slbl{font-family:var(--mono);font-size:.6rem;color:var(--mu);text-transform:uppercase;letter-spacing:.09em;margin-bottom:5px;}
+.sval{font-family:var(--disp);font-size:1.7rem;font-weight:700;line-height:1;letter-spacing:-.04em;}
+.sg{color:var(--g);} .sr{color:var(--r);} .sa{color:var(--a);} .sp{color:var(--p);}
+.ssub{font-size:.64rem;color:var(--mu);margin-top:3px;}
+
+/* main layout */
+.main-grid{display:grid;grid-template-columns:1fr 300px;gap:14px;margin-bottom:14px;}
+@media(max-width:900px){.main-grid{grid-template-columns:1fr;}}
+
+/* panel */
+.panel{background:var(--s1);border:1px solid var(--b1);border-radius:14px;overflow:hidden;}
+.ph{padding:12px 16px 10px;border-bottom:1px solid var(--b1);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;}
+.pt{font-family:var(--disp);font-size:.88rem;font-weight:700;letter-spacing:-.02em;}
+.pb{font-family:var(--mono);font-size:.62rem;padding:2px 8px;border-radius:999px;}
+.pb-g{background:var(--gd);color:var(--g);border:1px solid rgba(0,232,122,.22);}
+.pb-r{background:var(--rd);color:var(--r);border:1px solid rgba(255,61,84,.22);}
+.pb-a{background:var(--ad);color:var(--a);border:1px solid rgba(255,176,32,.22);}
+.pb-p{background:var(--pd);color:var(--p);border:1px solid rgba(124,127,255,.22);}
+
+/* portfolio table */
+.prow{display:grid;grid-template-columns:58px 1fr 72px 72px 72px 80px 72px;align-items:center;padding:9px 15px;border-bottom:1px solid var(--b1);gap:5px;transition:background .12s;font-size:.78rem;}
+.prow:hover{background:var(--s2);}
+.prow:last-child{border-bottom:none;}
+.prow.hdr{background:var(--s2);padding:6px 15px;}
+.prow.hdr:hover{background:var(--s2);}
+.cl{font-family:var(--mono);font-size:.58rem;color:var(--mu);text-transform:uppercase;letter-spacing:.08em;}
+.tk{font-family:var(--mono);font-size:.78rem;font-weight:500;color:var(--g);}
+.mono{font-family:var(--mono);font-size:.75rem;}
+.pos{color:var(--g);font-weight:500;}
+.neg{color:var(--r);font-weight:500;}
+.neu{color:var(--mu);}
+.sig{font-family:var(--mono);font-size:.58rem;padding:2px 6px;border-radius:999px;font-weight:500;}
+.sg2{background:var(--gd);color:var(--g);border:1px solid rgba(0,232,122,.2);}
+.sp2{background:var(--pd);color:var(--p);border:1px solid rgba(124,127,255,.2);}
+.sa2{background:var(--ad);color:var(--a);border:1px solid rgba(255,176,32,.2);}
+.sr2{background:var(--rd);color:var(--r);border:1px solid rgba(255,61,84,.2);}
+
+/* trade log */
+.log-entry{display:flex;align-items:flex-start;gap:10px;padding:10px 15px;border-bottom:1px solid var(--b1);transition:background .12s;}
+.log-entry:hover{background:var(--s2);}
+.log-entry:last-child{border-bottom:none;}
+.log-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:.75rem;flex-shrink:0;margin-top:1px;font-family:var(--mono);font-weight:500;}
+.log-body{flex:1;min-width:0;}
+.log-title{font-size:.78rem;font-weight:500;margin-bottom:2px;}
+.log-meta{font-size:.67rem;color:var(--mu);font-family:var(--mono);}
+.log-time{font-family:var(--mono);font-size:.63rem;color:var(--mu);white-space:nowrap;flex-shrink:0;}
+
+/* equity chart */
+.chart-wrap{padding:12px 16px 14px;}
+.chart-labels{display:flex;justify-content:space-between;font-family:var(--mono);font-size:.62rem;color:var(--mu);margin-top:6px;}
+
+/* allocation bar */
+.alloc-item{padding:9px 15px;border-bottom:1px solid var(--b1);display:flex;align-items:center;gap:10px;}
+.alloc-item:last-child{border-bottom:none;}
+.alloc-sym{font-family:var(--mono);font-size:.75rem;font-weight:500;width:44px;flex-shrink:0;color:var(--g);}
+.alloc-name{font-size:.73rem;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.alloc-bar-bg{width:80px;height:4px;border-radius:2px;background:rgba(255,255,255,.07);overflow:hidden;flex-shrink:0;}
+.alloc-bar-fill{height:100%;border-radius:2px;background:var(--g);transition:width .5s;}
+.alloc-pct{font-family:var(--mono);font-size:.7rem;color:var(--mu);width:30px;text-align:right;flex-shrink:0;}
+.alloc-pnl{font-family:var(--mono);font-size:.72rem;font-weight:500;width:52px;text-align:right;flex-shrink:0;}
+
+/* empty states */
+.empty{padding:28px 16px;text-align:center;font-size:.77rem;color:var(--mu);line-height:1.7;}
+
+/* progress bar */
+.progress-track{background:var(--s2);border-radius:4px;height:6px;overflow:hidden;margin-bottom:4px;}
+.progress-fill{height:100%;border-radius:4px;background:var(--g);transition:width .6s;}
+
+/* SETUP DONE overlay pane */
+.sim-info{background:var(--gd);border:1px solid rgba(0,232,122,.2);border-radius:12px;padding:13px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.sim-info-text{font-size:.78rem;color:var(--mu2);flex:1;}
+.sim-info-text strong{color:var(--tx);}
+
+/* scrollbar */
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px;}
+</style>
+</head>
+<body>
+<div id="sitenav" style="background:rgba(14,18,24,0.95);border-bottom:1px solid rgba(255,255,255,0.1);padding:7px 20px;display:flex;align-items:center;justify-content:space-between;position:relative;z-index:2;">
+  <span style="font-family:'DM Mono',monospace;font-size:.68rem;color:#6b7890;">smart-money-tracker</span>
+  <div style="display:flex;gap:8px;">
+    <a href="index.html" style="font-family:'DM Mono',monospace;font-size:.68rem;color:#6b7890;text-decoration:none;padding:3px 10px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);">📊 Dashboard</a>
+    <a href="simulation.html" style="font-family:'DM Mono',monospace;font-size:.68rem;color:#00e87a;text-decoration:none;padding:3px 10px;border-radius:6px;background:rgba(0,232,122,0.1);border:1px solid rgba(0,232,122,0.2);">🔬 Simulation</a>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SETUP SCREEN ═══════════════════════ -->
+<div id="setup-screen">
+<div class="setup-card">
+  <div class="setup-logo">
+    <div class="setup-logo-mark">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M3 18L9 12L13 15L20 7" stroke="#07080a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="20" cy="6.5" r="2.5" fill="#07080a"/></svg>
+    </div>
+    <div class="setup-logo-name">Sim<span>Trader</span></div>
+  </div>
+
+  <div class="setup-h">Configure your<br><span>simulation</span></div>
+  <div class="setup-p">Set your starting capital and run period. The tracker opens daily, checks live prices via Finnhub, fires buy and sell signals automatically, and logs every trade. Come back any day to see how your portfolio is performing.</div>
+
+  <!-- Starting capital -->
+  <div class="field-group">
+    <label class="field-label">Starting capital <span>$</span></label>
+    <input class="field-input" id="capital-input" type="number" placeholder="e.g. 1000" min="100" max="1000000" value="1000">
+    <div class="amount-presets">
+      <div class="preset" onclick="setCapital(500)">$500</div>
+      <div class="preset on" onclick="setCapital(1000)">$1,000</div>
+      <div class="preset" onclick="setCapital(5000)">$5,000</div>
+      <div class="preset" onclick="setCapital(10000)">$10,000</div>
+      <div class="preset" onclick="setCapital(25000)">$25,000</div>
+      <div class="preset" onclick="setCapital(50000)">$50,000</div>
+    </div>
+  </div>
+
+  <!-- Run period -->
+  <div class="field-group">
+    <label class="field-label">Simulation period</label>
+    <div class="period-options" id="period-opts">
+      <div class="period-opt" onclick="setPeriod(14,this)"><div class="period-name">2 weeks</div><div class="period-desc">14 trading days</div></div>
+      <div class="period-opt on" onclick="setPeriod(30,this)"><div class="period-name">1 month</div><div class="period-desc">~22 trading days</div></div>
+      <div class="period-opt" onclick="setPeriod(90,this)"><div class="period-name">3 months</div><div class="period-desc">~65 trading days</div></div>
+      <div class="period-opt" onclick="setPeriod(180,this)"><div class="period-name">6 months</div><div class="period-desc">~130 trading days</div></div>
+      <div class="period-opt" onclick="setPeriod(365,this)"><div class="period-name">1 year</div><div class="period-desc">~252 trading days</div></div>
+      <div class="period-opt" onclick="setPeriod(0,this)"><div class="period-name">Run forever</div><div class="period-desc">No end date</div></div>
+    </div>
+  </div>
+
+  <!-- Strategy -->
+  <div class="field-group">
+    <label class="field-label">Algorithm strategy</label>
+    <select class="field-input" id="strat-select" style="cursor:pointer;">
+      <option value="smart">Smart money momentum (13F + price action)</option>
+      <option value="ai">AI &amp; semiconductor focus (high risk)</option>
+      <option value="balanced">Balanced US + EU diversified</option>
+      <option value="momentum">Pure price momentum</option>
+      <option value="value">Value + fundamentals</option>
+    </select>
+  </div>
+
+  <!-- Finnhub key -->
+  <div class="field-group">
+    <label class="field-label">Finnhub API key <span>(free at finnhub.io)</span></label>
+    <div class="api-row">
+      <input class="field-input" id="key-input" type="text" placeholder="Paste your free Finnhub API key..." autocomplete="off" spellcheck="false">
+    </div>
+  </div>
+
+  <div id="setup-err"></div>
+  <button class="btn-launch" id="launch-btn" onclick="launchSim()">
+    Start simulation →
+  </button>
+</div>
+</div>
+
+<!-- ═══════════════════════ MAIN APP ═══════════════════════ -->
+<div id="app">
+
+<!-- TICKER -->
+<div id="ticker-wrap">
+  <div id="ticker-inner" class="ticker-inner">
+    <span class="tick"><span class="tick-sym" style="color:var(--mu);">Loading live prices...</span></span>
+  </div>
+</div>
+
+<div class="wrap">
+<header>
+  <div class="hi">
+    <div class="hlogo">
+      <div class="hmark"><svg viewBox="0 0 24 24" fill="none"><path d="M3 18L9 12L13 15L20 7" stroke="#07080a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="20" cy="6.5" r="2.5" fill="#07080a"/></svg></div>
+      <div class="hname">Sim<span>Trader</span></div>
+    </div>
+    <div class="hright">
+      <div class="hmeta">
+        <span><span class="ldot"></span>Live</span>
+        <span id="hdr-strat" style="color:var(--g);">—</span>
+        <span id="hdr-period"></span>
+        <span id="hdr-time">—</span>
+      </div>
+      <button class="btn" id="refresh-btn" onclick="runDailyCheck()">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+        Run today
+      </button>
+      <button class="btn btn-danger" onclick="confirmReset()">Reset</button>
+      <button id="theme-btn" onclick="toggleTheme()"><span id="ticon">☀️</span> <span id="tlbl">Light</span></button>
+    </div>
+  </div>
+</header>
+
+<!-- SIM INFO BAR -->
+<div class="sim-info" id="sim-info-bar">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--g);flex-shrink:0;"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+  <div class="sim-info-text" id="sim-info-text">Loading simulation state...</div>
+  <div>
+    <div class="progress-track" style="width:160px;"><div class="progress-fill" id="sim-progress" style="width:0%;"></div></div>
+    <div style="font-family:var(--mono);font-size:.62rem;color:var(--mu);margin-top:3px;" id="progress-lbl">Day 0 of —</div>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="stats">
+  <div class="stat"><div class="slbl">Portfolio value</div><div class="sval sg" id="sv-total">—</div><div class="ssub" id="sv-total-sub">—</div></div>
+  <div class="stat"><div class="slbl">Total P&L</div><div class="sval" id="sv-pnl">—</div><div class="ssub" id="sv-pnl-sub">—</div></div>
+  <div class="stat"><div class="slbl">Cash available</div><div class="sval" id="sv-cash">—</div><div class="ssub">Uninvested</div></div>
+  <div class="stat"><div class="slbl">Open positions</div><div class="sval sp" id="sv-positions">—</div><div class="ssub">Active holdings</div></div>
+  <div class="stat"><div class="slbl">Total trades</div><div class="sval sa" id="sv-trades">—</div><div class="ssub">Buys + sells</div></div>
+  <div class="stat"><div class="slbl">Days elapsed</div><div class="sval" id="sv-days">—</div><div class="ssub" id="sv-days-sub">—</div></div>
+</div>
+
+<div class="main-grid">
+
+  <!-- Left: positions + chart -->
+  <div style="display:flex;flex-direction:column;gap:13px;">
+
+    <!-- Open positions -->
+    <div class="panel">
+      <div class="ph">
+        <div class="pt">Open positions</div>
+        <div class="pb pb-g" id="pos-badge">0 holdings</div>
+      </div>
+      <div class="prow hdr">
+        <div class="cl">Ticker</div><div class="cl">Company</div><div class="cl">Shares</div>
+        <div class="cl">Entry</div><div class="cl">Current</div><div class="cl">P&L</div>
+        <div class="cl">Signal</div>
+      </div>
+      <div id="positions-body"><div class="empty">No open positions yet.<br>Click "Run today" to fire the first day's trades.</div></div>
+    </div>
+
+    <!-- Equity chart -->
+    <div class="panel">
+      <div class="ph"><div class="pt">Portfolio equity curve</div><div class="pb pb-g" id="chart-badge">$0</div></div>
+      <div class="chart-wrap">
+        <div style="position:relative;width:100%;height:180px;">
+          <canvas id="equity-chart" role="img" aria-label="Portfolio equity curve over simulation period"></canvas>
+        </div>
+        <div class="chart-labels"><span id="chart-start">Day 1</span><span id="chart-end">Today</span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Right: allocation + trade log -->
+  <div style="display:flex;flex-direction:column;gap:13px;">
+
+    <!-- Allocation -->
+    <div class="panel">
+      <div class="ph"><div class="pt">Allocation</div><div class="pb pb-p" id="alloc-badge">—</div></div>
+      <div id="alloc-body"><div class="empty" style="padding:18px;">No positions yet.</div></div>
+    </div>
+
+    <!-- Trade log -->
+    <div class="panel">
+      <div class="ph">
+        <div class="pt">Trade log</div>
+        <div class="pb pb-a" id="log-badge">0 trades</div>
+      </div>
+      <div id="trade-log" style="max-height:380px;overflow-y:auto;">
+        <div class="empty">Trades will appear here as they fire.</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</div><!-- /wrap -->
+</div><!-- /app -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+// ═══════════════════════════════════════════════════════════════
+// UNIVERSE — all tradeable stocks
+// ═══════════════════════════════════════════════════════════════
+const UNIVERSE={
+  smart:   ['NVDA','PLTR','AVGO','ASML','ARM','CRDO','MSFT','AMZN','META','ADYEN','AAPL','NOW','DDOG','SNOW','TSM'],
+  ai:      ['NVDA','PLTR','TSM','AVGO','ARM','CRDO','ALAB','ASML','DDOG','SNOW','AMZN','META','NOW','CRM','GOOGL'],
+  balanced:['NVDA','MSFT','AAPL','V','LLY','ASML','SAP','AIR','ADYEN','ADS','META','JPM','NOVO-B','SIEGY','ENEL'],
+  momentum:['PLTR','CRDO','ARM','NVDA','ALAB','ASML','META','ADYEN','SNOW','NOW','AMZN','AVGO','DDOG','CRM','GOOGL'],
+  value:   ['AAPL','V','JPM','KO','AXP','SAP','NOVO-B','SIEGY','BNP','INGA','KO','LLY','CVX','SHEL','OR'],
+};
+const NAMES={
+  NVDA:'Nvidia',PLTR:'Palantir',AVGO:'Broadcom',META:'Meta',MSFT:'Microsoft',
+  AAPL:'Apple',AMZN:'Amazon',TSM:'TSMC',ARM:'Arm Holdings',CRDO:'Credo Tech',
+  ALAB:'Astera Labs',V:'Visa',JPM:'JPMorgan',OXY:'Occidental',CVX:'Chevron',
+  KO:'Coca-Cola',AXP:'Amex',GOOGL:'Alphabet',CRM:'Salesforce',NOW:'ServiceNow',
+  SNOW:'Snowflake',DDOG:'Datadog',XOM:'ExxonMobil',LLY:'Eli Lilly',UNH:'UnitedHealth',
+  ASML:'ASML Holding',SAP:'SAP SE','NOVO-B':'Novo Nordisk',LVMH:'LVMH',SIEGY:'Siemens',
+  ADYEN:'Adyen',INGA:'ING Group',ABI:'AB InBev',NOKIA:'Nokia',STLA:'Stellantis',
+  ENEL:'Enel SpA',SHEL:'Shell',BNP:'BNP Paribas',TTE:'TotalEnergies',
+  AMS:'Amadeus IT',PHIA:'Philips',ADS:'Adidas',OR:"L'Oreal",AIR:'Airbus',
+  DTE:'Deutsche Telekom',ALAB:'Astera Labs',
+};
+const BASE_SCORES={
+  NVDA:94,PLTR:91,AVGO:84,ASML:88,ARM:79,CRDO:76,ALAB:72,AMZN:88,
+  META:82,ADYEN:77,AAPL:94,NOW:74,DDOG:66,SNOW:68,TSM:87,MSFT:79,
+  CRM:71,GOOGL:78,V:71,JPM:63,LLY:73,SAP:76,AIR:69,ADS:61,
+  'NOVO-B':71,SIEGY:65,KO:52,AXP:50,BNP:59,INGA:58,CVX:58,SHEL:56,OR:63,ENEL:54,
+};
+
+// ═══════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════
+const STORE_KEY='_simtrader_v3';
+let SIM=null;        // loaded from localStorage
+let KEY='';
+let equityChart=null;
+let simPeriodDays=30;
+
+// ═══════════════════════════════════════════════════════════════
+// SETUP
+// ═══════════════════════════════════════════════════════════════
+function setCapital(v){
+  document.getElementById('capital-input').value=v;
+  document.querySelectorAll('.preset').forEach(p=>{
+    p.classList.toggle('on',parseInt(p.textContent.replace(/[$,k]/gi,m=>m==='k'?'000':''))==v||
+      p.textContent===`$${v.toLocaleString()}`||p.textContent===`$${v}`);
+  });
+}
+function setPeriod(days,el){
+  simPeriodDays=days;
+  document.querySelectorAll('.period-opt').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on');
+}
+function errMsg(t){document.getElementById('setup-err').textContent=t;}
+
+async function launchSim(){
+  const capital=parseFloat(document.getElementById('capital-input').value);
+  const key=document.getElementById('key-input').value.trim();
+  const strat=document.getElementById('strat-select').value;
+  if(!capital||capital<100){errMsg('Please enter a starting capital of at least $100.');return;}
+  if(!key){errMsg('Please paste your Finnhub API key.');return;}
+  errMsg('Validating API key...');
+  document.getElementById('launch-btn').disabled=true;
+  try{
+    const r=await fetch(`https://finnhub.io/api/v1/quote?symbol=AAPL&token=${key}`);
+    const d=await r.json();
+    if(!d||d.c===undefined||d.error) throw new Error('Invalid key');
+  }catch(e){errMsg('API key error: '+e.message);document.getElementById('launch-btn').disabled=false;return;}
+
+  KEY=key;
+  const startDate=new Date();
+  const endDate=simPeriodDays>0?new Date(startDate.getTime()+simPeriodDays*86400000):null;
+
+  SIM={
+    capital,startCapital:capital,cash:capital,
+    strat,
+    startDate:startDate.toISOString(),
+    endDate:endDate?endDate.toISOString():null,
+    periodDays:simPeriodDays,
+    lastRunDate:null,
+    positions:{},   // {SYM:{shares,entryPrice,entryDate,name}}
+    trades:[],      // [{date,type,sym,name,shares,price,value,reason}]
+    equityCurve:[{date:startDate.toISOString(),value:capital}],
+    dayCount:0,
+    apiKey:btoa(key),
+  };
+  saveSim();
+  startApp();
+  await runDailyCheck();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PERSISTENCE
+// ═══════════════════════════════════════════════════════════════
+function saveSim(){localStorage.setItem(STORE_KEY,JSON.stringify(SIM));}
+function loadSim(){try{const d=localStorage.getItem(STORE_KEY);return d?JSON.parse(d):null;}catch{return null;}}
+function confirmReset(){if(confirm('Reset simulation? All trade history and positions will be deleted.')){localStorage.removeItem(STORE_KEY);location.reload();}}
+
+// ═══════════════════════════════════════════════════════════════
+// APP START
+// ═══════════════════════════════════════════════════════════════
+function startApp(){
+  document.getElementById('setup-screen').style.display='none';
+  document.getElementById('app').style.display='block';
+  const stratNames={smart:'Smart money',ai:'AI & semis',balanced:'Balanced',momentum:'Momentum',value:'Value'};
+  document.getElementById('hdr-strat').textContent=stratNames[SIM.strat]||SIM.strat;
+  const end=SIM.endDate?new Date(SIM.endDate).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'Open-ended';
+  document.getElementById('hdr-period').textContent=SIM.periodDays>0?`${SIM.periodDays}d until ${end}`:'Unlimited';
+  renderAll();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// API
+// ═══════════════════════════════════════════════════════════════
+async function fetchQuote(sym){
+  try{
+    const r=await fetch(`https://finnhub.io/api/v1/quote?symbol=${sym}&token=${KEY}`);
+    const d=await r.json();
+    return(d&&d.c>0)?d:null;
+  }catch{return null;}
+}
+async function fetchAllQuotes(syms){
+  const res={};
+  for(const s of syms){
+    res[s]=await fetchQuote(s);
+    await new Promise(r=>setTimeout(r,140));
+  }
+  return res;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SIGNALS
+// ═══════════════════════════════════════════════════════════════
+function signalScore(sym,quote){
+  if(!quote) return 0;
+  const base=BASE_SCORES[sym]||50;
+  const dayChg=quote.dp||0;
+  const momentum=dayChg>1?1.1:dayChg>0?1.05:dayChg<-2?0.85:0.95;
+  return Math.round(base*momentum);
+}
+function shouldBuy(sym,quote,score){
+  if(!quote) return false;
+  if(SIM.positions[sym]) return false; // already holding
+  return score>=68&&(quote.dp||0)>-3;
+}
+function shouldSell(sym,quote,score,pos){
+  if(!quote||!pos) return{sell:false};
+  const pnlPct=((quote.c-pos.entryPrice)/pos.entryPrice)*100;
+  const held=daysBetween(pos.entryDate,new Date().toISOString());
+  // Take profit at +15%, stop loss at -8%, or score collapses below 45
+  if(pnlPct>=15) return{sell:true,reason:`Take profit +${pnlPct.toFixed(1)}%`};
+  if(pnlPct<=-8) return{sell:true,reason:`Stop loss ${pnlPct.toFixed(1)}%`};
+  if(score<45&&held>3) return{sell:true,reason:`Signal weakened (score ${score})`};
+  if(held>21) return{sell:true,reason:`Max hold period reached (${held}d)`};
+  return{sell:false};
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DAILY RUN
+// ═══════════════════════════════════════════════════════════════
+async function runDailyCheck(){
+  if(!SIM||!KEY){alert('No simulation running. Reload and configure.');return;}
+
+  // Check if simulation period ended
+  if(SIM.endDate&&new Date()>new Date(SIM.endDate)){
+    addLogEntry({type:'info',sym:'SIM',name:'Simulation complete',reason:`Period ended ${new Date(SIM.endDate).toLocaleDateString()}`});
+    renderAll();return;
+  }
+
+  const today=new Date().toDateString();
+  if(SIM.lastRunDate===today){
+    const rerun=confirm("Already ran today's simulation. Run again to get fresh prices?");
+    if(!rerun) return;
+  }
+
+  const btn=document.getElementById('refresh-btn');
+  btn.classList.add('spin');
+  btn.style.color='var(--g)';
+
+  document.getElementById('hdr-time').textContent='Running...';
+
+  const watchList=UNIVERSE[SIM.strat]||UNIVERSE.smart;
+  const allSyms=[...new Set([...watchList,...Object.keys(SIM.positions)])];
+
+  // Fetch all quotes
+  const quotes=await fetchAllQuotes(allSyms);
+
+  SIM.dayCount++;
+  const todayISO=new Date().toISOString();
+  const todayStr=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+
+  let totalTradeValue=0;
+
+  // ── SELLS FIRST ──
+  for(const sym of Object.keys(SIM.positions)){
+    const q=quotes[sym];
+    const pos=SIM.positions[sym];
+    const score=signalScore(sym,q);
+    const {sell,reason}=shouldSell(sym,q,score,pos);
+    if(sell&&q){
+      const value=pos.shares*q.c;
+      SIM.cash+=value;
+      const pnl=value-(pos.shares*pos.entryPrice);
+      SIM.trades.push({date:todayISO,type:'SELL',sym,name:pos.name||NAMES[sym]||sym,shares:pos.shares,price:q.c,value,pnl,reason});
+      addLogEntry({type:'sell',sym,name:pos.name||NAMES[sym]||sym,shares:pos.shares,price:q.c,value,pnl,reason,date:todayStr});
+      delete SIM.positions[sym];
+      totalTradeValue+=value;
+    }
+  }
+
+  // ── BUYS ──
+  // Allocate up to 15% per position, max 8 open positions
+  const maxPositions=8;
+  const positionSize=Math.min(SIM.cash*0.2, SIM.cash/(maxPositions-Object.keys(SIM.positions).length+1));
+
+  // Score and rank candidates
+  const candidates=watchList
+    .filter(s=>!SIM.positions[s])
+    .map(s=>({sym:s,score:signalScore(s,quotes[s]),q:quotes[s]}))
+    .filter(c=>shouldBuy(c.sym,c.q,c.score))
+    .sort((a,b)=>b.score-a.score)
+    .slice(0,3); // buy top 3 signals per day max
+
+  for(const cand of candidates){
+    if(Object.keys(SIM.positions).length>=maxPositions) break;
+    if(SIM.cash<50) break;
+    const invest=Math.min(positionSize,SIM.cash*0.95);
+    if(invest<50) break;
+    const shares=invest/cand.q.c;
+    SIM.cash-=invest;
+    SIM.positions[cand.sym]={shares,entryPrice:cand.q.c,entryDate:todayISO,name:NAMES[cand.sym]||cand.sym,score:cand.score};
+    SIM.trades.push({date:todayISO,type:'BUY',sym:cand.sym,name:NAMES[cand.sym]||cand.sym,shares,price:cand.q.c,value:invest,pnl:0,reason:`Score ${cand.score} — buy signal`});
+    addLogEntry({type:'buy',sym:cand.sym,name:NAMES[cand.sym]||cand.sym,shares,price:cand.q.c,value:invest,score:cand.score,date:todayStr});
+    totalTradeValue+=invest;
+  }
+
+  // ── EQUITY SNAPSHOT ──
+  let portfolioValue=SIM.cash;
+  for(const [sym,pos] of Object.entries(SIM.positions)){
+    const q=quotes[sym];
+    portfolioValue+=q?pos.shares*q.c:pos.shares*pos.entryPrice;
+  }
+  SIM.equityCurve.push({date:todayISO,value:portfolioValue});
+
+  // If no trades today, log that
+  if(candidates.length===0&&Object.keys(SIM.positions).length===0){
+    addLogEntry({type:'info',sym:'—',name:'No trades today',reason:'No qualifying buy signals. Holding cash.',date:todayStr});
+  } else if(candidates.length===0){
+    addLogEntry({type:'info',sym:'—',name:'Holding positions',reason:`${Object.keys(SIM.positions).length} open. No new entries today.`,date:todayStr});
+  }
+
+  SIM.lastRunDate=today;
+  saveSim();
+
+  // Update ticker
+  renderTicker(quotes);
+
+  btn.classList.remove('spin');
+  btn.style.color='';
+  document.getElementById('hdr-time').textContent='Updated '+new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+
+  renderAll(quotes);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════════════════
+function renderAll(quotes={}){
+  if(!SIM) return;
+
+  // Compute totals
+  let invested=0;
+  for(const [sym,pos] of Object.entries(SIM.positions)){
+    const q=quotes[sym];
+    invested+=q?pos.shares*q.c:pos.shares*pos.entryPrice;
+  }
+  const totalValue=SIM.cash+invested;
+  const pnl=totalValue-SIM.startCapital;
+  const pnlPct=((pnl/SIM.startCapital)*100);
+  const daysElapsed=daysBetween(SIM.startDate,new Date().toISOString());
+  const daysLeft=SIM.endDate?Math.max(0,daysBetween(new Date().toISOString(),SIM.endDate)):null;
+  const progress=SIM.periodDays>0?Math.min(100,(daysElapsed/SIM.periodDays)*100):null;
+
+  // Stats
+  document.getElementById('sv-total').textContent='$'+totalValue.toFixed(0);
+  document.getElementById('sv-total').className='sval '+(pnl>=0?'sg':'sr');
+  document.getElementById('sv-total-sub').textContent=`Started $${SIM.startCapital.toLocaleString()}`;
+  document.getElementById('sv-pnl').textContent=(pnl>=0?'+$':'-$')+Math.abs(pnl).toFixed(2);
+  document.getElementById('sv-pnl').className='sval '+(pnl>=0?'sg':'sr');
+  document.getElementById('sv-pnl-sub').textContent=(pnl>=0?'+':'')+pnlPct.toFixed(2)+'% total return';
+  document.getElementById('sv-cash').textContent='$'+SIM.cash.toFixed(0);
+  document.getElementById('sv-positions').textContent=Object.keys(SIM.positions).length;
+  document.getElementById('sv-trades').textContent=SIM.trades.length;
+  document.getElementById('sv-days').textContent=daysElapsed;
+  document.getElementById('sv-days-sub').textContent=daysLeft!=null?`${daysLeft}d remaining`:'Open-ended';
+
+  // Sim info bar
+  const started=new Date(SIM.startDate).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+  document.getElementById('sim-info-text').innerHTML=`<strong>$${SIM.startCapital.toLocaleString()}</strong> starting capital · <strong>${stratLabel(SIM.strat)}</strong> strategy · Started ${started} · Day <strong>${SIM.dayCount}</strong>`;
+  if(progress!=null){
+    document.getElementById('sim-progress').style.width=progress+'%';
+    document.getElementById('progress-lbl').textContent=`Day ${daysElapsed} of ${SIM.periodDays}`;
+  } else {
+    document.getElementById('sim-progress').style.width='30%';
+    document.getElementById('progress-lbl').textContent=`Day ${daysElapsed} · unlimited`;
+  }
+
+  // Positions
+  renderPositions(quotes);
+  renderAllocation(quotes);
+  renderChart();
+  renderLogPanel();
+}
+
+function renderPositions(quotes){
+  const entries=Object.entries(SIM.positions);
+  document.getElementById('pos-badge').textContent=entries.length+' holdings';
+  if(!entries.length){document.getElementById('positions-body').innerHTML='<div class="empty">No open positions.<br>Click "Run today" to check for buy signals.</div>';return;}
+  document.getElementById('positions-body').innerHTML=entries.map(([sym,pos])=>{
+    const q=quotes[sym];
+    const cur=q?q.c:pos.entryPrice;
+    const pnl=((cur-pos.entryPrice)/pos.entryPrice)*100;
+    const pnlVal=(cur-pos.entryPrice)*pos.shares;
+    const score=signalScore(sym,q);
+    const sigCls=score>=80?'sg2':score>=65?'sp2':score>=50?'sa2':'sr2';
+    const sigTxt=score>=80?'strong':score>=65?'hold':score>=50?'watch':'sell';
+    return`<div class="prow">
+      <div class="tk">${sym}</div>
+      <div style="font-size:.76rem;">${pos.name}</div>
+      <div class="mono">${pos.shares.toFixed(4)}</div>
+      <div class="mono neu">$${pos.entryPrice.toFixed(2)}</div>
+      <div class="mono ${q?'':'neu'}">${q?'$'+q.c.toFixed(2):'—'}</div>
+      <div class="${pnl>=0?'pos':'neg'}">${pnl>=0?'+':''}${pnl.toFixed(1)}% <span style="font-size:.63rem;opacity:.7;">${pnlVal>=0?'+$':'-$'}${Math.abs(pnlVal).toFixed(2)}</span></div>
+      <div><span class="sig ${sigCls}">${sigTxt} ${score}</span></div>
+    </div>`;
+  }).join('');
+}
+
+function renderAllocation(quotes){
+  const entries=Object.entries(SIM.positions);
+  let totalVal=SIM.cash;
+  const vals={};
+  for(const [sym,pos] of entries){
+    const q=quotes[sym];
+    const v=q?pos.shares*q.c:pos.shares*pos.entryPrice;
+    vals[sym]=v;totalVal+=v;
+  }
+  const cashPct=totalVal>0?(SIM.cash/totalVal)*100:100;
+  document.getElementById('alloc-badge').textContent='$'+totalVal.toFixed(0)+' total';
+  let html=`<div class="alloc-item">
+    <div class="alloc-sym" style="color:var(--mu);">CASH</div>
+    <div class="alloc-name" style="color:var(--mu);">Uninvested cash</div>
+    <div class="alloc-bar-bg"><div class="alloc-bar-fill" style="width:${cashPct.toFixed(0)}%;background:var(--mu);"></div></div>
+    <div class="alloc-pct" style="color:var(--mu);">${cashPct.toFixed(0)}%</div>
+    <div class="alloc-pnl" style="color:var(--mu);">$${SIM.cash.toFixed(0)}</div>
+  </div>`;
+  for(const [sym,pos] of entries.sort((a,b)=>(vals[b[0]]||0)-(vals[a[0]]||0))){
+    const v=vals[sym]||0;
+    const pct=totalVal>0?(v/totalVal)*100:0;
+    const pnlVal=v-(pos.shares*pos.entryPrice);
+    html+=`<div class="alloc-item">
+      <div class="alloc-sym">${sym}</div>
+      <div class="alloc-name">${pos.name}</div>
+      <div class="alloc-bar-bg"><div class="alloc-bar-fill" style="width:${pct.toFixed(0)}%;"></div></div>
+      <div class="alloc-pct">${pct.toFixed(0)}%</div>
+      <div class="alloc-pnl ${pnlVal>=0?'pos':'neg'}">${pnlVal>=0?'+$':'-$'}${Math.abs(pnlVal).toFixed(0)}</div>
+    </div>`;
+  }
+  document.getElementById('alloc-body').innerHTML=html;
+}
+
+function renderChart(){
+  const curve=SIM.equityCurve;
+  if(curve.length<2){return;}
+  const labels=curve.map((_,i)=>i===0?'Start':`D${i}`);
+  const data=curve.map(p=>parseFloat(p.value.toFixed(2)));
+  const start=SIM.startCapital;
+  const isDark=!document.documentElement.classList.contains('light');
+  const lineColor=data[data.length-1]>=start?'#00e87a':'#ff3d54';
+  const fillColor=data[data.length-1]>=start?'rgba(0,232,122,0.08)':'rgba(255,61,84,0.08)';
+  const gridColor=isDark?'rgba(255,255,255,0.06)':'rgba(0,0,0,0.06)';
+  const tickColor=isDark?'#6b7890':'#6b7280';
+
+  if(equityChart){equityChart.destroy();}
+  equityChart=new Chart(document.getElementById('equity-chart'),{
+    type:'line',
+    data:{
+      labels,
+      datasets:[{
+        data,
+        borderColor:lineColor,
+        backgroundColor:fillColor,
+        borderWidth:2,
+        pointRadius:data.length>30?0:3,
+        pointBackgroundColor:lineColor,
+        tension:.35,
+        fill:true,
+      }]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`$${ctx.parsed.y.toFixed(2)}`}}},
+      scales:{
+        x:{ticks:{color:tickColor,font:{size:10},maxTicksLimit:8},grid:{color:gridColor}},
+        y:{ticks:{color:tickColor,font:{size:10},callback:v=>'$'+v.toFixed(0)},grid:{color:gridColor}},
+      }
+    }
+  });
+  const last=curve[curve.length-1];
+  document.getElementById('chart-badge').textContent='$'+parseFloat(last.value.toFixed(2)).toLocaleString();
+  document.getElementById('chart-start').textContent=new Date(curve[0].date).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+  document.getElementById('chart-end').textContent=new Date(last.date).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+}
+
+function renderLogPanel(){
+  const trades=[...SIM.trades].reverse().slice(0,40);
+  document.getElementById('log-badge').textContent=SIM.trades.length+' trades';
+  if(!trades.length){document.getElementById('trade-log').innerHTML='<div class="empty">No trades yet.</div>';return;}
+  document.getElementById('trade-log').innerHTML=trades.map(t=>{
+    const isBuy=t.type==='BUY';
+    const isSell=t.type==='SELL';
+    const iconBg=isBuy?'var(--gd)':isSell?'var(--rd)':'var(--pd)';
+    const iconColor=isBuy?'var(--g)':isSell?'var(--r)':'var(--p)';
+    const icon=isBuy?'B':isSell?'S':'i';
+    const dateStr=new Date(t.date).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+    const pnlStr=isSell?(t.pnl>=0?` · <span style="color:var(--g)">+$${t.pnl.toFixed(2)}</span>`:`· <span style="color:var(--r)">-$${Math.abs(t.pnl).toFixed(2)}</span>`):'';
+    return`<div class="log-entry">
+      <div class="log-icon" style="background:${iconBg};color:${iconColor};">${icon}</div>
+      <div class="log-body">
+        <div class="log-title">${isBuy?'BUY':isSell?'SELL':'INFO'} ${t.sym} — ${t.name}</div>
+        <div class="log-meta">${dateStr} · ${t.shares?t.shares.toFixed(4)+' shares @ $'+t.price.toFixed(2):''} · ${t.reason||''}${pnlStr}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderTicker(quotes){
+  const syms=Object.keys(quotes).filter(s=>quotes[s]?.c>0);
+  if(!syms.length)return;
+  const items=syms.map(s=>{
+    const q=quotes[s];
+    const up=(q.dp||0)>=0;
+    return`<span class="tick"><span class="tick-dot" style="background:${up?'var(--g)':'var(--r)'}"></span><span class="tick-sym">${s}</span><span style="color:var(--mu2)">$${q.c.toFixed(2)}</span><span class="${up?'tick-up':'tick-dn'}">${up?'+':''}${(q.dp||0).toFixed(2)}%</span></span>`;
+  }).join('');
+  document.getElementById('ticker-inner').innerHTML=items+items;
+}
+
+function addLogEntry(e){
+  // Already stored in SIM.trades, this just ensures UI log stays fresh during current session
+}
+
+// ═══════════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════════
+function daysBetween(a,b){return Math.floor((new Date(b)-new Date(a))/(86400000));}
+function stratLabel(s){return{smart:'Smart money',ai:'AI & semis',balanced:'Balanced',momentum:'Momentum',value:'Value'}[s]||s;}
+function applyTheme(m){
+  document.documentElement.classList.toggle('light',m==='light');
+  document.getElementById('ticon').textContent=m==='light'?'🌙':'☀️';
+  document.getElementById('tlbl').textContent=m==='light'?'Dark':'Light';
+  localStorage.setItem('_theme',m);
+  if(SIM) setTimeout(renderChart,100);
+}
+function toggleTheme(){applyTheme(document.documentElement.classList.contains('light')?'dark':'light');}
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded',async()=>{
+  const theme=localStorage.getItem('_theme');
+  if(theme) applyTheme(theme);
+
+  // Preset click sync
+  document.getElementById('capital-input').addEventListener('input',function(){
+    document.querySelectorAll('.preset').forEach(p=>p.classList.remove('on'));
+  });
+
+  // Check for existing simulation
+  const saved=loadSim();
+  if(saved){
+    SIM=saved;
+    if(SIM.apiKey){try{KEY=atob(SIM.apiKey);}catch{}}
+    startApp();
+    // Auto-run if not run today
+    const today=new Date().toDateString();
+    if(SIM.lastRunDate!==today&&KEY){
+      setTimeout(runDailyCheck,800);
+    } else {
+      renderAll();
+      document.getElementById('hdr-time').textContent='Loaded · '+new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+    }
+  }
+
+  // Allow Enter on key input
+  document.getElementById('key-input')?.addEventListener('keydown',e=>{if(e.key==='Enter')launchSim();});
+});
+</script>
+</body>
+</html>
